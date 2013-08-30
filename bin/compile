@@ -280,9 +280,22 @@ for var in \`env | cut -f1 -d=\`; do
 	echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf
 done
 
-touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/php-errors.log /app/local/var/log/newrelic/newrelic-daemon.log /app/local/var/log/newrelic/php_agent.log
+mkfifo /app/vendor/nginx/logs/access.log
+mkfifo /app/vendor/nginx/logs/error.log
+mkfifo /app/vendor/php/var/log/php-fpm.log
+mkfifo /app/vendor/php/var/log/php-errors.log 
+mkfifo /app/local/var/log/newrelic/newrelic-daemon.log
+mkfifo /app/local/var/log/newrelic/php_agent.log
+
+tail -F /app/vendor/nginx/logs/access.log &
+tail -F /app/vendor/nginx/logs/error.log &
+tail -F /app/vendor/php/var/log/php-fpm.log &
+tail -F /app/vendor/php/var/log/php-errors.log & 
+tail -F /app/local/var/log/newrelic/newrelic-daemon.log &
+tail -F /app/local/var/log/newrelic/php_agent.log &
+
 mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp
-(tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log &)
+# (tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log &)
 
 if [ "\${NEW_RELIC_LICENSE_KEY}" ]; then
 	/app/local/bin/newrelic-daemon -c /app/local/etc/newrelic.cfg -d error
